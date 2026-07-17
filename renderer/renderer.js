@@ -1,4 +1,4 @@
-/* cue renderer — UI state, mic capture, IPC, streaming render. */
+/* OpenCluely renderer — UI state, mic capture, IPC, streaming render. */
 (function () {
   const { icon } = window.ICONS;
   const cue = window.cue; // exposed by preload
@@ -228,10 +228,10 @@
   });
   let statusTimer = null;
   function showStatus(message) {
-    let el = document.getElementById('cue-status');
+    let el = document.getElementById('opencluely-status');
     if (!el) {
       el = document.createElement('div');
-      el.id = 'cue-status';
+      el.id = 'opencluely-status';
       const panel = document.getElementById('panel');
       panel.insertBefore(el, document.getElementById('action-row'));
     }
@@ -240,7 +240,7 @@
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => el.classList.remove('show'), 11000);
   }
-  cue.on('status', ({ message }) => { cue.log('[status] ' + message); showStatus(message); });
+   cue.on('status', ({ message }) => { cue.log('[OpenCluely] ' + message); showStatus(message); });
 
   // ---- settings ----------------------------------------------------------
   const scrim = $('#settings-scrim');

@@ -45,8 +45,8 @@ function createWindow() {
     }
   });
 
-  // Invisibility + overlay behavior. Set CUE_NO_PROTECT=1 to disable for debugging.
-  // Note: setContentProtection is macOS-specific. On Windows, we rely on other mechanisms.
+// Invisibility + overlay behavior. Set OPENCULEY_NO_PROTECT=1 to disable for debugging.
+// Note: setContentProtection is macOS-specific. On Windows, we rely on other mechanisms.
   if (process.platform === 'darwin') {
     win.setContentProtection(!process.env.CUE_NO_PROTECT); // excluded from screen capture (best-effort)
   }
@@ -60,7 +60,7 @@ function createWindow() {
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   win.webContents.on('did-finish-load', () => win.showInactive());
-  win.webContents.on('render-process-gone', (_e, d) => console.log('[cue] renderer gone', JSON.stringify(d)));
+  win.webContents.on('render-process-gone', (_e, d) => console.log('[OpenCluely] renderer gone', JSON.stringify(d)));
 }
 
 // -------- STT flushing --------
@@ -152,7 +152,7 @@ async function runFeature(mode, userText) {
     let imageDataUrl = null;
     if (def.needsScreen) {
       try { imageDataUrl = await captureScreenshot(); }
-      catch (e) { send('status', { message: 'Screen capture needs permission — grant Screen Recording to cue in System Settings.' }); }
+      catch (e) { send('status', { message: 'Screen capture needs permission — grant Screen Recording to OpenCluely in System Settings.' }); }
     }
 
     const built = def.build({ transcript, userText: userText || '' });
@@ -204,7 +204,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler((_wc, permission) => allowMedia(permission));
 
   // System-audio loopback for getDisplayMedia: hand back a screen source with 'loopback'
-  // audio so the renderer can capture what's playing (Zoom/Meet) using cue's own grant.
+  // audio so the renderer can capture what's playing (Zoom/Meet) using OpenCluely's own grant.
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
     desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
       if (sources.length) callback({ video: sources[0], audio: 'loopback' });

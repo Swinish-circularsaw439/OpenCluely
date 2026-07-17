@@ -253,6 +253,10 @@ button:focus { outline: none; }
 .custom-provider-field input { margin-bottom: 4px; }
 .custom-provider-field input:first-of-type { margin-bottom: 0; }
 .s-status { color: var(--tx-mut); font-size: 12px; margin-top: 10px; min-height: 16px; }
+.s-credits { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.10); }
+.s-credit-item { font-size: 12px; color: var(--tx-mut); line-height: 1.5; }
+.s-credit-item a { color: var(--accent); text-decoration: none; }
+.s-credit-item a:hover { text-decoration: underline; }
 
 /* ============================ Onboarding / tutorial ============================ */
 #onboard-scrim { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(0,0,0,0.45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }

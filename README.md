@@ -1,6 +1,6 @@
 <div align="center">
 
-# cue
+# OpenCluely
 
 **An open-source AI copilot that floats over your screen — sees what you see, hears your meetings, and stays hidden from screen shares.**
 
@@ -113,7 +113,7 @@ cue can't help until the system lets it see and hear. When you first use a featu
 
 ### Step 2 — Add your AI key (bring your own)
 
-cue uses **your own** API key, so it's free to run (you only pay your AI provider for what you use). Click the **`...`** button in the input box (or press `⌘` `,`) to open **Settings**, pick a provider, and paste your key:
+OpenCluely uses **your own** API key, so it's free to run (you only pay your AI provider for what you use). Click the **`...`** button in the input box (or press `⌘` `,`) to open **Settings**, pick a provider, and paste your key:
 
 | Provider | Get a key | Notes |
 |---|---|---|
@@ -218,8 +218,18 @@ Issues and PRs welcome. cue is intentionally small and readable — `main.js` (a
 
 ## Credits & license
 
-Built as an open-source study of how tools like **Cluely** and **Interview Coder** work. Modeled on the open-source clones `pickle-com/glass` and `sohzm/cheating-daddy`.
+Built as an open-source alternative to Cluely. Modeled on open-source projects and designed for privacy and flexibility.
 
 **License: [GPL-3.0-or-later](LICENSE).**
+
+## Creator
+
+| Platform        | URL                                        |
+| --------------- | ------------------------------------------ |
+| **Portfolio**   | <https://rahulshyam-portfolio.vercel.app/> |
+| **LinkedIn**    | <https://linkedin.com/in/rahulshyamcivil>  |
+| **X (Twitter)** | <https://x.com/RahulShyamCV>               |
+| **Threads**     | <https://threads.com/@rahulcvjps>          |
+| **GitHub**      | <https://github.com/rahulcvwebsitehosting> |
 
 **Platforms:** macOS and Windows

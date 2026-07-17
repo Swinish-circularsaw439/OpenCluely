@@ -1,4 +1,4 @@
-// Inlined Lucide icon paths (MIT, lucide.dev) + cue's own logo glyph.
+// Inlined Lucide icon paths (MIT, lucide.dev) + OpenCluely's own logo glyph.
 // icon(name, {size, stroke, fill}) -> SVG markup string.
 (function () {
   const P = {
