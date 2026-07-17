@@ -31,16 +31,27 @@ async function transcribeGemini(apiKey, wav) {
 }
 
 async function transcribeNVIDIA(apiKey, wav, model) {
+  // NVIDIA NIM ASR — uses OpenAI-compatible /v1/audio/transcriptions endpoint
+  // Try the NIM microservice endpoint first
   const modelName = model || 'nvidia/parakeet-ctc-1.1b-en';
-  const url = 'https://ai.api.nvidia.com/v1/nvidia/nemo/' + modelName.replace('nvidia/', '') + ':transcribe';
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audio: wav.toString('base64'), encoding: 'wav', sample_rate: 16000 })
-  });
-  if (!response.ok) throw new Error('NVIDIA ASR error: ' + response.status);
-  const data = await response.json();
-  return ((data && data.text) || '').trim();
+  const endpoints = [
+    'https://ai.api.nvidia.com/v1',
+    'https://integrate.api.nvidia.com/v1',
+  ];
+  let lastErr = null;
+  for (const baseURL of endpoints) {
+    try {
+      const OpenAI = require('openai');
+      const toFile = OpenAI.toFile || require('openai/uploads').toFile;
+      const client = new OpenAI({ apiKey, baseURL });
+      const file = await toFile(wav, 'audio.wav', { type: 'audio/wav' });
+      const res = await client.audio.transcriptions.create({ file, model: modelName });
+      return (res.text || '').trim();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('NVIDIA ASR: all endpoints failed');
 }
 
 function suggestionMessage(expectedSTT) {
@@ -83,9 +94,9 @@ function createSTT(settings) {
     } else if (chatProvider === 'gemini' && keys.gemini) {
       addGemini(keys.gemini);
     }
-    // Fallback: OpenAI → Gemini → NVIDIA
-    if (chatProvider !== 'openai' && keys.openai) addOpenAI(keys.openai, sttModel, 'openai');
+    // Fallback: Gemini → OpenAI → NVIDIA
     if (chatProvider !== 'gemini' && keys.gemini) addGemini(keys.gemini);
+    if (chatProvider !== 'openai' && keys.openai) addOpenAI(keys.openai, sttModel, 'openai');
     if (keys.nvidia) addNVIDIA(keys.nvidia, sttModel);
   } else {
     if (!VALID_STT.includes(sttProvider)) {
