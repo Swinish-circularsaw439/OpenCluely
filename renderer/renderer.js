@@ -357,17 +357,17 @@
    const OB_STEPS = [
      {
        icon: '👋',
-       title: 'Welcome to cue',
-       body: 'cue is a private AI copilot that floats over your screen. It can <strong>see your screen</strong>, <strong>hear your meetings</strong>, and help you answer questions or solve coding problems.<br><br>This quick guide gets you running in about a minute.'
+       title: 'Welcome to OpenCluely',
+       body: 'OpenCluely is a private AI copilot that floats over your screen. It can <strong>see your screen</strong>, <strong>hear your meetings</strong>, and help you answer questions or solve coding problems.<br><br>This quick guide gets you running in about a minute.'
      },
      {
        icon: '🔐',
-       title: 'Allow cue to see & hear',
+       title: 'Allow OpenCluely to see & hear',
        body: (() => {
          if (window.cue.platform === 'win32') {
-           return 'cue needs system permissions. Click each button, turn <strong>cue</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen capture</strong> — to see your screen and hear meeting audio</li></ul>';
+           return 'OpenCluely needs system permissions. Click each button, turn <strong>OpenCluely</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen capture</strong> — to see your screen and hear meeting audio</li></ul>';
          } else {
-           return 'cue needs system permissions. Click each button, turn <strong>cue</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen Recording</strong> — to see your screen and hear meeting audio</li></ul>';
+           return 'OpenCluely needs system permissions. Click each button, turn <strong>OpenCluely</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen Recording</strong> — to see your screen and hear meeting audio</li></ul>';
          }
        })(),
        buttons: (() => {
@@ -384,29 +384,29 @@
          }
        })()
      },
-      {
-        icon: '🔑',
-        title: 'Connect an AI provider',
-        body: 'cue uses <strong>your own</strong> API key — pick <span class="hl">OpenAI</span>, <span class="hl">Anthropic</span>, <span class="hl">Google Gemini</span>, <span class="hl">Mistral</span>, <span class="hl">NVIDIA</span>, <span class="hl">Ollama</span>, or <span class="hl">OpenRouter</span>. Get a key from your provider, then paste it into cue\'s Settings.<br><br><strong>Tip:</strong> the listening features need speech-to-text access (an OpenAI key with Whisper, or a Gemini key). A chat-only key still powers screen &amp; coding help.',
-        buttons: [{ label: 'Open cue Settings', action: () => { finishOnboard(); openSettings(); } }]
-      },
+     {
+       icon: '🔑',
+       title: 'Connect an AI provider',
+       body: 'OpenCluely uses <strong>your own</strong> API key — pick <span class="hl">OpenAI</span>, <span class="hl">Anthropic</span>, <span class="hl">Google Gemini</span>, <span class="hl">Mistral</span>, <span class="hl">NVIDIA</span>, <span class="hl">Ollama</span>, or <span class="hl">OpenRouter</span>. Get a key from your provider, then paste it into OpenCluely\'s Settings.<br><br><strong>Tip:</strong> the listening features need speech-to-text access (an OpenAI key with Whisper, or a Gemini key). A chat-only key still powers screen &amp; coding help.',
+       buttons: [{ label: 'Open OpenCluely Settings', action: () => { finishOnboard(); openSettings(); } }]
+     },
     {
       icon: '🫥',
       title: 'Stay hidden in Zoom',
-      body: 'cue is hidden from most screen shares automatically (Google Meet, Teams, QuickTime — nothing to do). <strong>Zoom needs one setting:</strong><br><br>Zoom → <span class="hl">Settings</span> → <span class="hl">Share Screen</span> → <span class="hl">Advanced</span> → <strong>Screen capture mode</strong> → choose <strong>“Advanced capture with window filtering.”</strong><br><br>Avoid “<strong>without</strong> window filtering” — that mode reveals cue.'
+      body: 'OpenCluely is hidden from most screen shares automatically (Google Meet, Teams, QuickTime — nothing to do). <strong>Zoom needs one setting:</strong><br><br>Zoom → <span class="hl">Settings</span> → <span class="hl">Share Screen</span> → <span class="hl">Advanced</span> → <strong>Screen capture mode</strong> → choose <strong>“Advanced capture with window filtering.”</strong><br><br>Avoid “<strong>without</strong> window filtering” — that mode reveals OpenCluely.'
     },
      {
        icon: '✨',
        title: 'You’re all set',
        body: (() => {
          if (window.cue.platform === 'win32') {
-           return 'How to use cue:<ul><li><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">Ctrl</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>cue logo</strong>. Quit with <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
+           return 'How to use OpenCluely:<ul><li><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">Ctrl</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
          } else {
-           return 'How to use cue:<ul><li><span class="kbd">⌘</span> + <span class="kbd">↵</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">⌘</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>cue logo</strong>. Quit with <span class="kbd">⌘</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
+           return 'How to use OpenCluely:<ul><li><span class="kbd">⌘</span> + <span class="kbd">↵</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">⌘</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">⌘</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
          }
        })()
      }
-  ];
+   ];
   let obIndex = 0;
   function renderOnboard() {
     const step = OB_STEPS[obIndex];

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --mac zip --win"
+    "dist": "electron-builder --win"
   },
   "build": {
     "appId": "com.opencluely.overlay",
@@ -53,6 +53,7 @@
     "windows"
   ],
   "devDependencies": {
+    "@electron/packager": "^20.0.3",
     "electron": "^33.2.1",
     "electron-builder": "^24.13.3"
   },
