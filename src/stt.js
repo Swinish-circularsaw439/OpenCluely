@@ -5,8 +5,7 @@ const { pcmToWav } = require('./wav');
 
 // OpenAI-compatible providers: same API shape, different baseURL
 const STT_ENDPOINTS = {
-  openai:  { baseURL: undefined,                     defaultModel: 'whisper-1' },
-  nvidia:  { baseURL: 'https://integrate.api.nvidia.com/v1', defaultModel: 'whisper-large-v3' },
+  openai: { baseURL: undefined, defaultModel: 'whisper-1' },
 };
 
 async function transcribeOpenAICompatible(apiKey, wav, model, label, baseURL) {
@@ -31,6 +30,19 @@ async function transcribeGemini(apiKey, wav) {
   return ((res && res.text) || '').trim();
 }
 
+async function transcribeNVIDIA(apiKey, wav, model) {
+  const modelName = model || 'nvidia/parakeet-ctc-1.1b-en';
+  const url = 'https://ai.api.nvidia.com/v1/nvidia/nemo/' + modelName.replace('nvidia/', '') + ':transcribe';
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audio: wav.toString('base64'), encoding: 'wav', sample_rate: 16000 })
+  });
+  if (!response.ok) throw new Error('NVIDIA ASR error: ' + response.status);
+  const data = await response.json();
+  return ((data && data.text) || '').trim();
+}
+
 function suggestionMessage(expectedSTT) {
   const label = expectedSTT ? ' for "' + expectedSTT + '"' : '';
   const lines = [
@@ -38,7 +50,7 @@ function suggestionMessage(expectedSTT) {
     'Options:',
     '  • OpenAI Whisper (paid, ~$0.006/min) — add OpenAI key',
     '  • Gemini 2.5 Flash (free tier) — add Gemini key (or reuse chat key)',
-    '  • NVIDIA Whisper-large-v3 (free, ~40 rpm) — free key at build.nvidia.com',
+    '  • NVIDIA Parakeet ASR (free, ~40 rpm) — free key at build.nvidia.com',
   ];
   return lines.join('\n');
 }
@@ -58,6 +70,9 @@ function createSTT(settings) {
   function addGemini(key) {
     chain.push({ p: 'gemini', fn: (wav) => transcribeGemini(key, wav) });
   }
+  function addNVIDIA(key, m) {
+    chain.push({ p: 'nvidia', fn: (wav) => transcribeNVIDIA(key, wav, m) });
+  }
 
   const VALID_STT = ['auto', 'openai', 'gemini', 'nvidia', 'deepgram'];
 
@@ -71,7 +86,7 @@ function createSTT(settings) {
     // Fallback: OpenAI → Gemini → NVIDIA
     if (chatProvider !== 'openai' && keys.openai) addOpenAI(keys.openai, sttModel, 'openai');
     if (chatProvider !== 'gemini' && keys.gemini) addGemini(keys.gemini);
-    if (keys.nvidia) addOpenAI(keys.nvidia, sttModel, 'nvidia');
+    if (keys.nvidia) addNVIDIA(keys.nvidia, sttModel);
   } else {
     if (!VALID_STT.includes(sttProvider)) {
       return {
@@ -99,8 +114,10 @@ function createSTT(settings) {
         suggestion: 'Deepgram support coming soon. Use OpenAI, Gemini, or NVIDIA for now.',
         async transcribe() { return { text: '', error: { message: 'Deepgram transcription is not yet implemented.' } }; }
       };
+    } else if (sttProvider === 'nvidia') {
+      addNVIDIA(key, sttModel);
     } else {
-      // OpenAI-compatible (openai, nvidia)
+      // OpenAI-compatible (openai)
       addOpenAI(key, sttModel, sttProvider);
     }
   }
