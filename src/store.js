@@ -10,14 +10,14 @@ const DEFAULTS = {
   smart: false,
   apiKeys: { openai: '', anthropic: '', gemini: '', deepgram: '' },
   models: {
-    openai: { fast: 'gpt-4o-mini', smart: 'gpt-4o' },
-    anthropic: { fast: 'claude-3-5-haiku-latest', smart: 'claude-3-5-sonnet-latest' },
-    gemini: { fast: 'gemini-1.5-flash', smart: 'gemini-1.5-pro' },
-    mistral: { fast: 'mistral-tiny', smart: 'mistral-small-latest' },
-    nvidia: { fast: 'nvidia/llama-3.1-nemotron-70b-instruct', smart: 'nvidia/llama-3.1-nemotron-70b-instruct' },
-    ollama: { fast: 'llama3', smart: 'llama3' },
+    openai: { fast: 'gpt-5.1-mini', smart: 'gpt-5.1' },
+    anthropic: { fast: 'claude-haiku-4-5', smart: 'claude-sonnet-4-6' },
+    gemini: { fast: 'gemini-2.5-flash', smart: 'gemini-2.5-pro' },
+    mistral: { fast: 'mistral-small-latest', smart: 'mistral-large-latest' },
+    nvidia: { fast: 'nvidia/llama-3.3-nemotron-super-49b-v1', smart: 'nvidia/llama-3.1-nemotron-ultra-253b-v1' },
+    ollama: { fast: 'llama3.2', smart: 'llama3.2' },
     openrouter: { fast: 'openrouter/auto', smart: 'openrouter/auto' },
-    custom: { model: 'custom-model' }
+    custom: { model: '' }
   },
   customProviders: []
 };
