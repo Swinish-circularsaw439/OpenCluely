@@ -30,8 +30,6 @@ A small glass panel floats over everything on your screen. It reads **three inpu
 | **Settings** | `Ctrl` + `,` | `⌘` + `,` | — |
 | **Quit** | `Ctrl` + `Shift` + `X` | `⌘` + `⇧` + `X` | — |
 
-<img src="docs/zoom-capture-mode.png" width="620" alt="OpenCluely staying hidden during a Zoom screen share" />
-
 ## Quick start
 
 ### Windows
@@ -71,6 +69,19 @@ npm start
 - **Private.** Keys and settings live in a local JSON file. No servers, no analytics, no data leaves your machine except to the AI provider you chose.
 - **Custom.** Add any OpenAI-compatible endpoint.
 - **Open source.** GPL-3.0. Read the code, fork it, change it.
+
+## Getting API keys
+
+| Provider | How to get a key |
+|---|---|
+| **OpenAI** | Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys), click **Create new secret key**. For listening features the key must have Whisper/audio access. |
+| **Anthropic** | Go to [console.anthropic.com](https://console.anthropic.com), sign up, navigate to **API Keys** and create one. |
+| **Gemini** | Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey), click **Get API key**. One key works for both chat and transcription. |
+| **Mistral** | Go to [console.mistral.ai](https://console.mistral.ai), create an account, go to **API Keys** and generate a key. |
+| **NVIDIA** | Go to [build.nvidia.com](https://build.nvidia.com), sign in, select any model and click **Get API Key**. |
+| **Ollama** | No key needed. [Download Ollama](https://ollama.ai), run it locally, pull a model (e.g. `ollama pull llama3.2`). |
+| **OpenRouter** | Go to [openrouter.ai/keys](https://openrouter.ai/keys), sign in and create a key. Single key gives access to 400+ models. |
+| **Custom** | Any OpenAI-compatible endpoint. Enter the base URL, model name, and API key in the Custom provider settings. |
 
 ## How it stays invisible
 
