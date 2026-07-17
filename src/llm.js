@@ -1,4 +1,4 @@
-// LLM factory — OpenAI / Anthropic / Gemini behind one streaming interface.
+// LLM factory — OpenAI / Anthropic / Gemini / Mistral / NVIDIA / Ollama / OpenRouter behind one streaming interface.
 // stream({ system, turns:[{role,text}], imageDataUrl, maxTokens, onToken }) -> Promise<fullText>
 
 function stripDataUrl(dataUrl) {
@@ -6,10 +6,10 @@ function stripDataUrl(dataUrl) {
   return m ? { mime: m[1], b64: m[2] } : null;
 }
 
-async function streamOpenAI({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
-  const OpenAI = require('openai');
-  const client = new OpenAI({ apiKey });
-  const messages = [{ role: 'system', content: system }];
+// Build messages with image on last user turn (OpenAI-compatible format)
+function buildMessages({ system, turns, imageDataUrl }) {
+  const messages = [];
+  if (system) messages.push({ role: 'system', content: system });
   turns.forEach((t, i) => {
     const last = i === turns.length - 1;
     if (last && imageDataUrl && t.role === 'user') {
@@ -21,6 +21,13 @@ async function streamOpenAI({ apiKey, model, system, turns, imageDataUrl, maxTok
       messages.push({ role: t.role, content: t.text });
     }
   });
+  return messages;
+}
+
+async function streamOpenAI({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
+  const OpenAI = require('openai');
+  const client = new OpenAI({ apiKey });
+  const messages = buildMessages({ system, turns, imageDataUrl });
   const stream = await client.chat.completions.create({ model, messages, stream: true, max_tokens: maxTokens });
   let full = '';
   for await (const part of stream) {
@@ -77,22 +84,13 @@ async function streamGemini({ apiKey, model, system, turns, imageDataUrl, maxTok
 
 async function streamMistral({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
   const url = 'https://api.mistral.ai/v1/chat/completions';
-  const messages = turns.map(t => ({ role: t.role, content: t.text }));
-  if (system) messages.unshift({ role: 'system', content: system });
+  const messages = buildMessages({ system, turns, imageDataUrl });
   
-  const payload = {
-    model,
-    messages,
-    max_tokens: maxTokens,
-    stream: true
-  };
+  const payload = { model, messages, max_tokens: maxTokens, stream: true };
   
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify(payload)
   });
   
@@ -124,22 +122,13 @@ async function streamMistral({ apiKey, model, system, turns, imageDataUrl, maxTo
 
 async function streamNvidia({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
   const url = 'https://integrate.api.nvidia.com/v1/chat/completions';
-  const messages = turns.map(t => ({ role: t.role, content: t.text }));
-  if (system) messages.unshift({ role: 'system', content: system });
+  const messages = buildMessages({ system, turns, imageDataUrl });
   
-  const payload = {
-    model,
-    messages,
-    max_tokens: maxTokens,
-    stream: true
-  };
+  const payload = { model, messages, max_tokens: maxTokens, stream: true };
   
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify(payload)
   });
   
@@ -170,17 +159,20 @@ async function streamNvidia({ apiKey, model, system, turns, imageDataUrl, maxTok
 }
 
 async function streamOllama({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
-  // Ollama doesn't require API key, but we accept it for consistency
   const url = 'http://localhost:11434/api/chat';
-  const messages = turns.map(t => ({ role: t.role, content: t.text }));
-  if (system) messages.unshift({ role: 'system', content: system });
+  const messages = [];
+  if (system) messages.push({ role: 'system', content: system });
+  turns.forEach((t, i) => {
+    const last = i === turns.length - 1;
+    const msg = { role: t.role, content: t.text };
+    if (last && imageDataUrl && t.role === 'user') {
+      const img = stripDataUrl(imageDataUrl);
+      if (img) msg.images = [img.b64];
+    }
+    messages.push(msg);
+  });
   
-  const payload = {
-    model,
-    messages,
-    options: { num_predict: maxTokens },
-    stream: true
-  };
+  const payload = { model, messages, options: { num_predict: maxTokens }, stream: true };
   
   const response = await fetch(url, {
     method: 'POST',
@@ -200,14 +192,11 @@ async function streamOllama({ apiKey, model, system, turns, imageDataUrl, maxTok
     const chunk = decoder.decode(value);
     const lines = chunk.split('\n').filter(line => line.trim());
     for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const data = line.slice(6);
-        try {
-          const parsed = JSON.parse(data);
-          const msg = parsed.message?.content;
-          if (msg) { full += msg; onToken(msg); }
-        } catch (e) {}
-      }
+      try {
+        const parsed = JSON.parse(line);
+        const msg = parsed.message?.content;
+        if (msg) { full += msg; onToken(msg); }
+      } catch (e) {}
     }
   }
   return full;
@@ -215,22 +204,13 @@ async function streamOllama({ apiKey, model, system, turns, imageDataUrl, maxTok
 
 async function streamOpenRouter({ apiKey, model, system, turns, imageDataUrl, maxTokens, onToken }) {
   const url = 'https://openrouter.ai/api/v1/chat/completions';
-  const messages = turns.map(t => ({ role: t.role, content: t.text }));
-  if (system) messages.unshift({ role: 'system', content: system });
+  const messages = buildMessages({ system, turns, imageDataUrl });
   
-  const payload = {
-    model,
-    messages,
-    max_tokens: maxTokens,
-    stream: true
-  };
+  const payload = { model, messages, max_tokens: maxTokens, stream: true };
   
   const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
     body: JSON.stringify(payload)
   });
   
@@ -264,8 +244,16 @@ function createLLM(settings) {
   const provider = settings.provider;
   const keys = settings.apiKeys || {};
   const apiKey = keys[provider];
+  const models = settings.models || {};
   const tier = settings.smart ? 'smart' : 'fast';
-  const model = (settings.models[provider] || {})[tier];
+
+  let model;
+  if (provider === 'custom') {
+    model = (models.custom || {}).model;
+  } else {
+    model = (models[provider] || {})[tier];
+  }
+  
   const maxTokens = settings.smart ? 1400 : 700;
 
   return {
