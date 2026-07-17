@@ -120,8 +120,8 @@
   }
   $('#send-btn').addEventListener('click', send);
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) { e.preventDefault(); send(); }
-    if (e.key === 'Enter' && e.metaKey) { e.preventDefault(); runMode('assist', ''); }
+    if (e.key === 'Enter' && !e.shiftKey && !(e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); runMode('assist', ''); }
   });
 
   // Smart toggle
@@ -367,7 +367,10 @@
   // ---- global keys -------------------------------------------------------
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !scrim.classList.contains('hidden')) closeSettings();
-    if (e.metaKey && e.key === ',') { e.preventDefault(); openSettings(); }
+    if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); openSettings(); }
+    if (e.ctrlKey && e.key === 'Enter' && !busy) { e.preventDefault(); runMode('assist', ''); }
+    if (e.ctrlKey && e.key === 'h' && !busy) { e.preventDefault(); runMode('leetcode', ''); }
+    if (e.ctrlKey && e.key === 'H' && !busy) { e.preventDefault(); runMode('leetcode', ''); }
   });
 
   // ---- click-through: only the UI blocks the mouse; empty gaps pass to your screen ----

@@ -184,10 +184,19 @@ ipcMain.on('log', (_e, msg) => console.log('[renderer]', msg));
 
 // -------- shortcuts --------
 function registerShortcuts() {
-  // Use platform-agnostic shortcuts
-  globalShortcut.register(process.platform === 'darwin' ? 'CommandOrControl+Return' : 'Control+Enter', () => runFeature('assist', ''));
-  globalShortcut.register(process.platform === 'darwin' ? 'CommandOrControl+H' : 'Control+H', () => runFeature('leetcode', ''));
-  globalShortcut.register(process.platform === 'darwin' ? 'CommandOrControl+Shift+X' : 'Control+Shift+X', () => app.quit());
+  const os = process.platform === 'darwin' ? 'mac' : 'win';
+  // Assist — Mac: Cmd+Enter, Windows: Ctrl+Enter
+  if (!globalShortcut.register(os === 'mac' ? 'CommandOrControl+Return' : 'Ctrl+Enter', () => runFeature('assist', ''))) {
+    console.log('[shortcuts] assist registration failed');
+  }
+  // LeetCode — Mac: Cmd+H, Windows: Ctrl+H
+  if (!globalShortcut.register(os === 'mac' ? 'CommandOrControl+H' : 'Ctrl+H', () => runFeature('leetcode', ''))) {
+    console.log('[shortcuts] leetcode registration failed');
+  }
+  // Quit — Mac: Cmd+Shift+X, Windows: Ctrl+Shift+X
+  if (!globalShortcut.register(os === 'mac' ? 'CommandOrControl+Shift+X' : 'Ctrl+Shift+X', () => app.quit())) {
+    console.log('[shortcuts] quit registration failed');
+  }
 }
 
 // -------- lifecycle --------
