@@ -69,18 +69,8 @@
           <button data-provider="custom">Custom</button>
         </div>
 
-        <label class="s-label">API keys <span class="s-hint">stored locally in opencluely-data.json</span></label>
-        <div class="s-field"><span>OpenAI</span><input id="key-openai" type="password" placeholder="sk-..." autocomplete="off" /></div>
-        <div class="s-field"><span>Anthropic</span><input id="key-anthropic" type="password" placeholder="sk-ant-..." autocomplete="off" /></div>
-        <div class="s-field"><span>Gemini</span><input id="key-gemini" type="password" placeholder="AIza..." autocomplete="off" /></div>
-        <div class="s-field"><span>Mistral</span><input id="key-mistral" type="password" placeholder="..." autocomplete="off" /></div>
-        <div class="s-field"><span>NVIDIA</span><input id="key-nvidia" type="password" placeholder="..." autocomplete="off" /></div>
-        <div class="s-field"><span>Ollama</span><input id="key-ollama" type="password" placeholder="(leave empty)" autocomplete="off" /></div>
-        <div class="s-field"><span>OpenRouter</span><input id="key-openrouter" type="password" placeholder="..." autocomplete="off" /></div>
-        <div class="s-field custom-provider-field" id="custom-provider-field" style="display: none;">
-          <span>Custom Provider</span>
-          <input id="key-custom" type="password" placeholder="API key" autocomplete="off" />
-          <input id="model-custom" type="text" placeholder="Model name" autocomplete="off" />
+        <div id="key-fields">
+          <label class="s-label">API key <span class="s-hint">stored locally in opencluely-data.json</span></label>
         </div>
 
         <label class="s-label">Models <span class="s-hint">fast = Smart off · smart = Smart on</span></label>

@@ -252,28 +252,61 @@
 
   function fillSettings() {
     document.querySelectorAll('#provider-seg button').forEach((b) => b.classList.toggle('on', b.dataset.provider === settings.provider));
-    $('#key-openai').value = settings.apiKeys.openai || '';
-    $('#key-anthropic').value = settings.apiKeys.anthropic || '';
-    $('#key-gemini').value = settings.apiKeys.gemini || '';
-    $('#key-mistral').value = settings.apiKeys.mistral || '';
-    $('#key-nvidia').value = settings.apiKeys.nvidia || '';
-    $('#key-ollama').value = settings.apiKeys.ollama || '';
-    $('#key-openrouter').value = settings.apiKeys.openrouter || '';
+    
+    // Rebuild key fields for the selected provider only
+    buildKeyField();
     
     const m = settings.models[settings.provider] || { fast: '', smart: '' };
     $('#model-fast').value = m.fast; $('#model-smart').value = m.smart;
     
-    // Show/hide custom provider field
-    const customField = $('#custom-provider-field');
-    if (settings.provider === 'custom') {
-      customField.style.display = 'block';
-      $('#key-custom').value = settings.apiKeys.custom || '';
-      $('#model-custom').value = (settings.models.custom || {}).model || '';
-    } else {
-      customField.style.display = 'none';
-    }
-    
     $('#s-status').textContent = statusText();
+  }
+  
+  function buildKeyField() {
+    const container = $('#key-fields');
+    // Clear all children except the label
+    while (container.children.length > 1) container.removeChild(container.lastChild);
+    
+    const provider = settings.provider;
+    const labels = {
+      openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Gemini',
+      mistral: 'Mistral', nvidia: 'NVIDIA', ollama: 'Ollama', openrouter: 'OpenRouter'
+    };
+    const placeholders = {
+      openai: 'sk-...', anthropic: 'sk-ant-...', gemini: 'AIza...',
+      mistral: '...', nvidia: '...', ollama: '(leave empty)', openrouter: '...'
+    };
+    
+    if (provider === 'custom') {
+      const div = document.createElement('div');
+      div.className = 's-field';
+      div.innerHTML = '<span>API Key</span>';
+      const inp = document.createElement('input');
+      inp.id = 'key-custom'; inp.type = 'password'; inp.placeholder = 'API key'; inp.autocomplete = 'off';
+      inp.value = settings.apiKeys.custom || '';
+      div.appendChild(inp);
+      container.appendChild(div);
+      
+      const div2 = document.createElement('div');
+      div2.className = 's-field';
+      div2.innerHTML = '<span>Model</span>';
+      const inp2 = document.createElement('input');
+      inp2.id = 'model-custom'; inp2.type = 'text'; inp2.placeholder = 'Model name'; inp2.autocomplete = 'off';
+      inp2.value = (settings.models.custom || {}).model || '';
+      div2.appendChild(inp2);
+      container.appendChild(div2);
+    } else {
+      const div = document.createElement('div');
+      div.className = 's-field';
+      div.innerHTML = '<span>' + (labels[provider] || provider) + '</span>';
+      const inp = document.createElement('input');
+      inp.id = 'key-' + provider; inp.type = 'password';
+      inp.placeholder = placeholders[provider] || '...';
+      inp.autocomplete = 'off';
+      inp.value = (settings.apiKeys[provider] || '');
+      div.appendChild(inp);
+      container.appendChild(div);
+    }
   }
   function statusText() {
     const k = settings.apiKeys;
@@ -292,33 +325,28 @@
   document.querySelectorAll('#provider-seg button').forEach((b) => b.addEventListener('click', () => {
     settings.provider = b.dataset.provider;
     document.querySelectorAll('#provider-seg button').forEach((x) => x.classList.toggle('on', x === b));
+    buildKeyField();
     const m = settings.models[settings.provider] || { fast: '', smart: '' };
     $('#model-fast').value = m.fast; $('#model-smart').value = m.smart;
-    
-    // Show/hide custom provider field
-    const customField = $('#custom-provider-field');
-    if (settings.provider === 'custom') {
-      customField.style.display = 'block';
-    } else {
-      customField.style.display = 'none';
-    }
-    
     $('#s-status').textContent = statusText();
   }));
   async function saveSettings() {
-    settings.apiKeys.openai = $('#key-openai').value.trim();
-    settings.apiKeys.anthropic = $('#key-anthropic').value.trim();
-    settings.apiKeys.gemini = $('#key-gemini').value.trim();
-    settings.apiKeys.mistral = $('#key-mistral').value.trim();
-    settings.apiKeys.nvidia = $('#key-nvidia').value.trim();
-    settings.apiKeys.ollama = $('#key-ollama').value.trim();
-    settings.apiKeys.openrouter = $('#key-openrouter').value.trim();
+    // Save the currently-displayed provider's key from the dynamic field
+    const keyInput = document.querySelector('#key-fields input[type=\"password\"]');
+    if (keyInput) {
+      const id = keyInput.id;
+      if (id === 'key-custom') {
+        settings.apiKeys.custom = keyInput.value.trim();
+        if (!settings.models.custom) settings.models.custom = {};
+        const modelInp = $('#model-custom');
+        if (modelInp) settings.models.custom.model = modelInp.value.trim();
+      } else {
+        const provider = id.replace('key-', '');
+        settings.apiKeys[provider] = keyInput.value.trim();
+      }
+    }
     
-    if (settings.provider === 'custom') {
-      settings.apiKeys.custom = $('#key-custom').value.trim();
-      if (!settings.models.custom) settings.models.custom = {};
-      settings.models.custom.model = $('#model-custom').value.trim();
-    } else {
+    if (settings.provider !== 'custom') {
       if (!settings.models[settings.provider]) settings.models[settings.provider] = {};
       settings.models[settings.provider].fast = $('#model-fast').value.trim();
       settings.models[settings.provider].smart = $('#model-smart').value.trim();
