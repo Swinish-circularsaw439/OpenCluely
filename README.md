@@ -7,7 +7,7 @@
 Bring your own AI key — OpenAI · Anthropic · Gemini · Mistral · NVIDIA · Ollama · OpenRouter · Custom
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](#quick-start)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)](#quick-start)
 [![Stars](https://img.shields.io/github/stars/rahulcvwebsitehosting/OpenCluely?style=social)](https://github.com/rahulcvwebsitehosting/OpenCluely)
 
 <img src="docs/tutorial.png" width="620" alt="OpenCluely first-run tutorial" />
@@ -18,32 +18,50 @@ Bring your own AI key — OpenAI · Anthropic · Gemini · Mistral · NVIDIA · 
 
 ## What it does
 
-A small glass panel floats over everything on your screen. It reads **three inputs** — your screen, your microphone, and the audio from your call — and uses any AI model you connect to help you in real time. It's excluded from screen-share and screen-recording capture, so it's visible to you and invisible to everyone else on the call.
+A small glass panel floats over everything on your screen. It reads **three inputs** — your screen, your microphone, and the audio from your call — and uses any AI model you connect to help you in real time. It's excluded from screen-share and screen-recording capture on macOS, so it's visible to you and invisible to everyone else on the call. On Windows, position it in a corner where it won't obstruct your work.
 
-| Feature | Shortcut | What it uses |
-|---|---|---|
-| **Assist** — do the smart thing right now | `⌘`/`Ctrl` + `↵` | screen + conversation |
-| **What should I say?** | button | meeting audio |
-| **Follow-up questions** | button | conversation |
-| **Recap** — catch up a late joiner | button | conversation |
-| **Solve coding problem** | `⌘`/`Ctrl` + `H` | screen only |
+| Feature | Windows | macOS | What it uses |
+|---|---|---|---|
+| **Assist** — do the smart thing right now | `Ctrl` + `Enter` | `⌘` + `↵` | screen + conversation |
+| **What should I say?** | button | button | meeting audio |
+| **Follow-up questions** | button | button | conversation |
+| **Recap** — catch up a late joiner | button | button | conversation |
+| **Solve coding problem** | `Ctrl` + `H` | `⌘` + `H` | screen only |
+| **Settings** | `Ctrl` + `,` | `⌘` + `,` | — |
+| **Quit** | `Ctrl` + `Shift` + `X` | `⌘` + `⇧` + `X` | — |
 
 <img src="docs/zoom-capture-mode.png" width="620" alt="OpenCluely staying hidden during a Zoom screen share" />
 
 ## Quick start
 
+### Windows
+
+1. Go to [Releases](https://github.com/rahulcvwebsitehosting/OpenCluely/releases) and download `OpenCluely-Windows-x64.zip`
+2. Extract the zip and run `OpenCluely.exe`
+3. Open Settings (`Ctrl` + `,`), pick a provider, paste your API key
+4. Press `Ctrl` + `Enter` to assist with whatever's on screen
+
+### macOS
+
+1. Download from [Releases](https://github.com/rahulcvwebsitehosting/OpenCluely/releases) or run from source:
+   ```bash
+   git clone https://github.com/rahulcvwebsitehosting/OpenCluely.git
+   cd OpenCluely
+   npm install && npm start
+   ```
+2. Open Settings (`⌘` + `,`), pick a provider, paste your API key
+3. Press `⌘` + `↵` to assist with whatever's on screen
+
+> **macOS first open:** Right-click `OpenCluely.app` → Open → click Open. If told it's damaged, run `xattr -cr /Applications/OpenCluely.app` in Terminal once.
+
+### Building from source (any platform)
+
 ```bash
 git clone https://github.com/rahulcvwebsitehosting/OpenCluely.git
 cd OpenCluely
-npm install && npm start
+npm install
+npm start
 ```
-
-Or grab a build from [Releases](https://github.com/rahulcvwebsitehosting/OpenCluely/releases).
-
-1. Open Settings (gear icon), pick any provider, paste your API key
-2. Press `⌘↵` / `Ctrl+↵` to assist with whatever's on screen
-
-> Windows users: see [WINDOWS_SUPPORT.md](WINDOWS_SUPPORT.md) for platform-specific notes.
 
 ## Why OpenCluely?
 
@@ -56,7 +74,8 @@ Or grab a build from [Releases](https://github.com/rahulcvwebsitehosting/OpenClu
 
 ## How it stays invisible
 
-On macOS, OpenCluely uses `setContentProtection` to exclude its own window from screen capture — the OS-level API that keeps DRM content hidden from screenshots also hides this panel from Zoom, Meet, OBS, and screen-recording software. You see it; a screen share doesn't.
+- **macOS:** Uses `setContentProtection` to exclude its window from screen capture — the OS-level API that keeps DRM content hidden also hides OpenCluely from Zoom, Meet, OBS, and screen-recording software. You see it; a screen share doesn't.
+- **Windows:** Uses standard window management. OpenCluely stays on top of other windows but may appear in screen recordings. For the best experience in meetings, position the panel in a corner or use Zoom's "Advanced capture with window filtering" setting (Zoom → Settings → Share Screen → Advanced → Screen capture mode).
 
 ## A note on how you use this
 
