@@ -240,6 +240,56 @@ async function streamOpenRouter({ apiKey, model, system, turns, imageDataUrl, ma
   return full;
 }
 
+async function streamCustom({ apiKey, baseURL, model, system, turns, imageDataUrl, maxTokens, onToken }) {
+  const url = (baseURL || 'https://api.openai.com').replace(/\/+$/, '') + '/v1/chat/completions';
+  const messages = buildMessages({ system, turns, imageDataUrl });
+
+  const payload = { model, messages, max_tokens: maxTokens, stream: true };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) throw new Error(`Custom provider API error: ${response.status}`);
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let full = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n').filter(line => line.trim());
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6);
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices[0]?.delta?.content;
+          if (delta) { full += delta; onToken(delta); }
+        } catch (e) {}
+      }
+    }
+  }
+  return full;
+}
+
+async function withRetry(fn, maxRetries) {
+  let lastErr;
+  for (let i = 0; i <= maxRetries; i++) {
+    try { return await fn(); } catch (e) {
+      lastErr = e;
+      const retryable = e && (e.status === 429 || (e.status >= 500 && e.status < 600));
+      if (!retryable || i >= maxRetries) throw lastErr;
+      await new Promise((r) => setTimeout(r, Math.pow(2, i) * 1000 + Math.random() * 500));
+    }
+  }
+  throw lastErr;
+}
 function createLLM(settings) {
   const provider = settings.provider;
   const keys = settings.apiKeys || {};
@@ -248,27 +298,33 @@ function createLLM(settings) {
   const tier = settings.smart ? 'smart' : 'fast';
 
   let model;
+  let baseURL = null;
   if (provider === 'custom') {
     model = (models.custom || {}).model;
+    baseURL = (models.custom || {}).baseURL || '';
   } else {
     model = (models[provider] || {})[tier];
   }
   
-  const maxTokens = settings.smart ? 1400 : 700;
+  const maxTokens = settings.smart ? 3200 : 1400;
 
   return {
     provider, model, apiKey,
     ready: !!apiKey && !!model,
     async stream(params) {
-      const args = { apiKey, model, maxTokens, ...params };
-      if (provider === 'openai') return streamOpenAI(args);
-      if (provider === 'anthropic') return streamAnthropic(args);
-      if (provider === 'gemini') return streamGemini(args);
-      if (provider === 'mistral') return streamMistral(args);
-      if (provider === 'nvidia') return streamNvidia(args);
-      if (provider === 'ollama') return streamOllama(args);
-      if (provider === 'openrouter') return streamOpenRouter(args);
-      throw new Error('unknown provider: ' + provider);
+      const args = { apiKey, model, maxTokens, baseURL, ...params };
+      const dispatch = async () => {
+        if (provider === 'custom') return streamCustom(args);
+        if (provider === 'openai') return streamOpenAI(args);
+        if (provider === 'anthropic') return streamAnthropic(args);
+        if (provider === 'gemini') return streamGemini(args);
+        if (provider === 'mistral') return streamMistral(args);
+        if (provider === 'nvidia') return streamNvidia(args);
+        if (provider === 'ollama') return streamOllama(args);
+        if (provider === 'openrouter') return streamOpenRouter(args);
+        throw new Error('unknown provider: ' + provider);
+      };
+      return withRetry(dispatch, 2);
     }
   };
 };

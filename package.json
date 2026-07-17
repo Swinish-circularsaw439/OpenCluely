@@ -30,9 +30,9 @@
       "identity": null,
       "extendInfo": {
         "LSUIElement": true,
-        "NSMicrophoneUsageDescription": "cue transcribes your microphone so it can help you in conversations.",
-        "NSCameraUsageDescription": "cue does not use the camera.",
-        "NSAudioCaptureUsageDescription": "cue captures system audio to transcribe the other participant in a call."
+        "NSMicrophoneUsageDescription": "OpenCluely transcribes your microphone so it can help you in conversations.",
+        "NSCameraUsageDescription": "OpenCluely does not use the camera.",
+        "NSAudioCaptureUsageDescription": "OpenCluely captures system audio to transcribe the other participant in a call."
       }
     },
     "win": {

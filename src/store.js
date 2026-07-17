@@ -8,7 +8,7 @@ const FILE = path.join(app.getPath('userData'), 'opencluely-data.json');
 const DEFAULTS = {
   provider: 'openai',
   smart: false,
-  apiKeys: { openai: '', anthropic: '', gemini: '', deepgram: '' },
+  apiKeys: { openai: '', anthropic: '', gemini: '' },
   models: {
     openai: { fast: 'gpt-5.1-mini', smart: 'gpt-5.1' },
     anthropic: { fast: 'claude-haiku-4-5', smart: 'claude-sonnet-4-6' },
@@ -17,9 +17,12 @@ const DEFAULTS = {
     nvidia: { fast: 'nvidia/llama-3.3-nemotron-super-49b-v1', smart: 'nvidia/llama-3.1-nemotron-ultra-253b-v1' },
     ollama: { fast: 'llama3.2', smart: 'llama3.2' },
     openrouter: { fast: 'openrouter/auto', smart: 'openrouter/auto' },
-    custom: { model: '' }
+    custom: { model: '', baseURL: '' }
   },
-  customProviders: []
+  customProviders: [],
+  sttProvider: '',
+  sttModel: '',
+  sttApiKey: ''
 };
 
 let data = null;

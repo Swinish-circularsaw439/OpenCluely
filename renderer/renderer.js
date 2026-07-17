@@ -1,7 +1,7 @@
 /* OpenCluely renderer — UI state, mic capture, IPC, streaming render. */
 (function () {
   const { icon } = window.ICONS;
-  const cue = window.cue; // exposed by preload
+  const OpenCluely = window.OpenCluely; // exposed by preload
   const $ = (s) => document.querySelector(s);
 
   // ---- paint icons -------------------------------------------------------
@@ -91,7 +91,7 @@
   function runMode(mode, text) {
     if (busy) return;
     setBusy(true);
-    cue.ask({ mode, text: text || '' });
+    OpenCluely.ask({ mode, text: text || '' });
   }
 
   document.querySelectorAll('.act').forEach((btn) => {
@@ -129,7 +129,7 @@
   smartBtn.addEventListener('click', async () => {
     settings.smart = !settings.smart;
     smartBtn.classList.toggle('on', settings.smart);
-    await cue.settingsSet({ smart: settings.smart });
+    await OpenCluely.settingsSet({ smart: settings.smart });
   });
 
   // Hide / collapse
@@ -144,7 +144,7 @@
   $('#stop-btn').addEventListener('click', () => {
     const turningOn = !$('#stop-btn').classList.contains('active');
     if (turningOn) startSystemAudio();
-    cue.captureToggle();
+    OpenCluely.captureToggle();
   });
 
   // ---- capture: mic (renderer side) --------------------------------------
@@ -162,10 +162,10 @@
         const f = e.inputBuffer.getChannelData(0);
         const out = new Int16Array(f.length);
         for (let i = 0; i < f.length; i++) { const s = Math.max(-1, Math.min(1, f[i])); out[i] = s < 0 ? s * 0x8000 : s * 0x7fff; }
-        cue.micPcm(out.buffer);
+        OpenCluely.micPcm(out.buffer);
       };
     } catch (err) {
-      cue.log('mic error: ' + (err && err.message));
+      OpenCluely.log('mic error: ' + (err && err.message));
     }
   }
   function stopMic() {
@@ -175,7 +175,7 @@
     if (micStream) { micStream.getTracks().forEach((t) => t.stop()); micStream = null; }
   }
 
-  // ---- capture: system/meeting audio (getDisplayMedia loopback, in cue's process) ----
+  // ---- capture: system/meeting audio (getDisplayMedia loopback, in OpenCluely's process) ----
   let sysStream = null, sysCtx = null, sysNode = null, sysProc = null;
   async function startSystemAudio() {
     if (sysStream) return;
@@ -183,7 +183,12 @@
       const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
       stream.getVideoTracks().forEach((t) => t.stop()); // we only want the audio
       const tracks = stream.getAudioTracks();
-      if (!tracks.length) { cue.log('system audio: no loopback track (macOS loopback unsupported here)'); stream.getTracks().forEach((t) => t.stop()); return; }
+      if (!tracks.length) {
+        showStatus('System audio capture unavailable — meeting transcription needs loopback support. Mic still works.');
+        OpenCluely.log('system audio: no loopback track (loopback not supported on this OS or version)');
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       sysStream = stream;
       sysCtx = new AudioContext({ sampleRate: 16000 });
       sysNode = sysCtx.createMediaStreamSource(new MediaStream(tracks));
@@ -194,11 +199,11 @@
         const f = e.inputBuffer.getChannelData(0);
         const out = new Int16Array(f.length);
         for (let i = 0; i < f.length; i++) { const s = Math.max(-1, Math.min(1, f[i])); out[i] = s < 0 ? s * 0x8000 : s * 0x7fff; }
-        cue.systemPcm(out.buffer);
+        OpenCluely.systemPcm(out.buffer);
       };
-      cue.log('system audio: capturing loopback');
+      OpenCluely.log('system audio: capturing loopback');
     } catch (err) {
-      cue.log('system audio error: ' + (err && err.message));
+      OpenCluely.log('system audio error: ' + (err && err.message));
     }
   }
   function stopSystemAudio() {
@@ -209,20 +214,20 @@
   }
 
   // ---- events from main --------------------------------------------------
-  cue.on('capture:state', ({ active }) => {
+  OpenCluely.on('capture:state', ({ active }) => {
     $('#live-dot').classList.toggle('off', !active);
     $('#stop-btn').classList.toggle('active', active);
     if (active) { startMic(); startSystemAudio(); } else { stopMic(); stopSystemAudio(); }
   });
-  cue.on('llm:start', ({ userBubble, small }) => {
+  OpenCluely.on('llm:start', ({ userBubble, small }) => {
     clearMessages();
     if (userBubble) addUserBubble(userBubble);
     startAi(!!small);
     setBusy(true);
   });
-  cue.on('llm:token', ({ text }) => appendToken(text));
-  cue.on('llm:done', () => { finalizeAi(); setBusy(false); });
-  cue.on('llm:error', ({ message }) => {
+  OpenCluely.on('llm:token', ({ text }) => appendToken(text));
+  OpenCluely.on('llm:done', () => { finalizeAi(); setBusy(false); });
+  OpenCluely.on('llm:error', ({ message }) => {
     if (!aiEl) startAi(true);
     aiEl.dataset.raw = message; finalizeAi(); setBusy(false);
   });
@@ -240,7 +245,7 @@
     clearTimeout(statusTimer);
     statusTimer = setTimeout(() => el.classList.remove('show'), 11000);
   }
-   cue.on('status', ({ message }) => { cue.log('[OpenCluely] ' + message); showStatus(message); });
+   OpenCluely.on('status', ({ message }) => { OpenCluely.log('[OpenCluely] ' + message); showStatus(message); });
 
   // ---- settings ----------------------------------------------------------
   const scrim = $('#settings-scrim');
@@ -258,6 +263,16 @@
     
     const m = settings.models[settings.provider] || { fast: '', smart: '' };
     $('#model-fast').value = m.fast; $('#model-smart').value = m.smart;
+    
+    // STT settings
+    const sttProvider = settings.sttProvider || 'auto';
+    document.querySelectorAll('#stt-provider-seg button').forEach((b) => b.classList.toggle('on', b.dataset.stt === sttProvider));
+    const isAuto = sttProvider === 'auto';
+    document.querySelectorAll('.stt-field').forEach((el) => el.style.display = isAuto ? 'none' : '');
+    const sttKeyEl = $('#stt-key');
+    const sttModelEl = $('#stt-model');
+    if (sttKeyEl) sttKeyEl.value = settings.sttApiKey || '';
+    if (sttModelEl) sttModelEl.value = settings.sttModel || '';
     
     $('#s-status').textContent = statusText();
   }
@@ -295,6 +310,15 @@
       inp2.value = (settings.models.custom || {}).model || '';
       div2.appendChild(inp2);
       container.appendChild(div2);
+
+      const div3 = document.createElement('div');
+      div3.className = 's-field';
+      div3.innerHTML = '<span>Base URL</span>';
+      const inp3 = document.createElement('input');
+      inp3.id = 'baseurl-custom'; inp3.type = 'text'; inp3.placeholder = 'https://api.example.com'; inp3.autocomplete = 'off';
+      inp3.value = (settings.models.custom || {}).baseURL || '';
+      div3.appendChild(inp3);
+      container.appendChild(div3);
     } else {
       const div = document.createElement('div');
       div.className = 's-field';
@@ -319,8 +343,17 @@
       k.ollama && 'Ollama',
       k.openrouter && 'OpenRouter'
     ].filter(Boolean);
-    const stt = k.openai ? 'Whisper' : (k.gemini ? 'Gemini' : 'none');
-    return 'Active: ' + settings.provider + ' · keys: ' + (has.join(', ') || 'none set') + ' · transcription: ' + stt;
+    const sttLabel = { openai: 'Whisper', gemini: 'Gemini', nvidia: 'NVIDIA' };
+    const sttProv = settings.sttProvider || 'auto';
+    const sttName = sttProv === 'auto'
+      ? ((settings.provider === 'openai' && k.openai) ? 'Whisper'
+        : (settings.provider === 'gemini' && k.gemini) ? 'Gemini'
+        : k.openai ? 'Whisper'
+        : k.gemini ? 'Gemini'
+        : k.nvidia ? 'NVIDIA'
+        : 'none')
+      : (sttLabel[sttProv] || sttProv);
+    return 'Chat: ' + settings.provider + ' · Transcription: ' + sttName + ' · Keys: ' + (has.join(', ') || 'none');
   }
   document.querySelectorAll('#provider-seg button').forEach((b) => b.addEventListener('click', () => {
     settings.provider = b.dataset.provider;
@@ -328,6 +361,14 @@
     buildKeyField();
     const m = settings.models[settings.provider] || { fast: '', smart: '' };
     $('#model-fast').value = m.fast; $('#model-smart').value = m.smart;
+    $('#s-status').textContent = statusText();
+  }));
+  document.querySelectorAll('#stt-provider-seg button').forEach((b) => b.addEventListener('click', () => {
+    settings.sttProvider = b.dataset.stt;
+    document.querySelectorAll('#stt-provider-seg button').forEach((x) => x.classList.toggle('on', x === b));
+    // Show/hide custom key/model fields
+    const isAuto = b.dataset.stt === 'auto';
+    document.querySelectorAll('.stt-field').forEach((el) => el.style.display = isAuto ? 'none' : '');
     $('#s-status').textContent = statusText();
   }));
   async function saveSettings() {
@@ -340,6 +381,8 @@
         if (!settings.models.custom) settings.models.custom = {};
         const modelInp = $('#model-custom');
         if (modelInp) settings.models.custom.model = modelInp.value.trim();
+        const baseurlInp = $('#baseurl-custom');
+        if (baseurlInp) settings.models.custom.baseURL = baseurlInp.value.trim();
       } else {
         const provider = id.replace('key-', '');
         settings.apiKeys[provider] = keyInput.value.trim();
@@ -351,7 +394,14 @@
       settings.models[settings.provider].fast = $('#model-fast').value.trim();
       settings.models[settings.provider].smart = $('#model-smart').value.trim();
     }
-    await cue.settingsSet(settings);
+    
+    // STT fields
+    const sttKeyEl = $('#stt-key');
+    if (sttKeyEl) settings.sttApiKey = sttKeyEl.value.trim();
+    const sttModelEl = $('#stt-model');
+    if (sttModelEl) settings.sttModel = sttModelEl.value.trim();
+    
+    await OpenCluely.settingsSet(settings);
   }
 
   // ---- example conversation (matches the reference screenshot) ------------
@@ -375,7 +425,7 @@
 
   // ---- click-through: only the UI blocks the mouse; empty gaps pass to your screen ----
   let ignoring = null;
-  function setIgnore(v) { if (v !== ignoring) { ignoring = v; cue.setIgnoreMouse(v); } }
+  function setIgnore(v) { if (v !== ignoring) { ignoring = v; OpenCluely.setIgnoreMouse(v); } }
   document.addEventListener('mousemove', (e) => {
     const el = document.elementFromPoint(e.clientX, e.clientY);
     const overUI = !!(el && el.closest && el.closest('#toolbar, #panel-wrap, #settings-scrim, #onboard-scrim'));
@@ -395,22 +445,22 @@
        icon: '🔐',
        title: 'Allow OpenCluely to see & hear',
        body: (() => {
-         if (window.cue.platform === 'win32') {
+         if (window.OpenCluely.platform === 'win32') {
            return 'OpenCluely needs system permissions. Click each button, turn <strong>OpenCluely</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen capture</strong> — to see your screen and hear meeting audio</li></ul>';
          } else {
            return 'OpenCluely needs system permissions. Click each button, turn <strong>OpenCluely</strong> ON in the window that opens, then come back here.<ul><li><strong>Microphone</strong> — to hear you</li><li><strong>Screen Recording</strong> — to see your screen and hear meeting audio</li></ul>';
          }
        })(),
        buttons: (() => {
-         if (window.cue.platform === 'win32') {
+         if (window.OpenCluely.platform === 'win32') {
            return [
-             { label: 'Open Microphone settings', action: () => cue.openPane('ms-settings:privacy-microphone') },
-             { label: 'Open Screen capture settings', action: () => cue.openPane('ms-settings:privacy-backgroundapps') }
+             { label: 'Open Microphone settings', action: () => OpenCluely.openPane('ms-settings:privacy-microphone') },
+             { label: 'Open Screen capture settings', action: () => OpenCluely.openPane('ms-settings:privacy-screencapture') }
            ];
          } else {
            return [
-             { label: 'Open Microphone settings', action: () => cue.openPane('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone') },
-             { label: 'Open Screen Recording settings', action: () => cue.openPane('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture') }
+             { label: 'Open Microphone settings', action: () => OpenCluely.openPane('x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone') },
+             { label: 'Open Screen Recording settings', action: () => OpenCluely.openPane('x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture') }
            ];
          }
        })()
@@ -418,7 +468,7 @@
      {
        icon: '🔑',
        title: 'Connect an AI provider',
-       body: 'OpenCluely uses <strong>your own</strong> API key — pick <span class="hl">OpenAI</span>, <span class="hl">Anthropic</span>, <span class="hl">Google Gemini</span>, <span class="hl">Mistral</span>, <span class="hl">NVIDIA</span>, <span class="hl">Ollama</span>, or <span class="hl">OpenRouter</span>. Get a key from your provider, then paste it into OpenCluely\'s Settings.<br><br><strong>Tip:</strong> the listening features need speech-to-text access (an OpenAI key with Whisper, or a Gemini key). A chat-only key still powers screen &amp; coding help.',
+        body: 'OpenCluely uses <strong>your own</strong> API key — pick <span class="hl">OpenAI</span>, <span class="hl">Anthropic</span>, <span class="hl">Google Gemini</span>, <span class="hl">Mistral</span>, <span class="hl">NVIDIA</span>, <span class="hl">Ollama</span>, or <span class="hl">OpenRouter</span>. Get a key from your provider, then paste it into OpenCluely\'s Settings.<br><br><strong>Tip:</strong> listening needs a speech-to-text provider (separate from your chat provider). Open <strong>Settings → Audio / Transcription</strong> to choose one — <span class="hl">OpenAI Whisper</span>, <span class="hl">Gemini</span>, or <span class="hl">NVIDIA Whisper-large-v3</span> (free).',
        buttons: [{ label: 'Open OpenCluely Settings', action: () => { finishOnboard(); openSettings(); } }]
      },
     {
@@ -430,7 +480,7 @@
         icon: '✨',
         title: 'You’re all set',
         body: (() => {
-          if (window.cue.platform === 'win32') {
+          if (window.OpenCluely.platform === 'win32') {
             return 'How to use OpenCluely:<ul><li><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">Ctrl</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
           } else {
             return 'How to use OpenCluely:<ul><li><span class="kbd">⌘</span> + <span class="kbd">↵</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">⌘</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">⌘</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
@@ -442,7 +492,7 @@
         title: 'Support the project',
         body: 'If you find OpenCluely useful, please consider starring the project on GitHub. It helps others discover it and keeps development active.<br><br>Created by <strong>Rahul Shyam</strong>. Follow on <a href="https://github.com/rahulcvwebsitehosting" target="_blank" style="color:var(--accent);">GitHub</a> for updates.',
         buttons: [
-          { label: 'Star on GitHub', action: () => cue.openPane('https://github.com/rahulcvwebsitehosting/OpenCluely') }
+          { label: 'Star on GitHub', action: () => OpenCluely.openPane('https://github.com/rahulcvwebsitehosting/OpenCluely') }
         ]
       }
     ];
@@ -463,7 +513,7 @@
   function showOnboard() { obIndex = 0; renderOnboard(); obScrim.classList.remove('hidden'); setIgnore(false); }
   async function finishOnboard() {
     obScrim.classList.add('hidden');
-    if (settings && !settings.onboarded) { settings.onboarded = true; await cue.settingsSet({ onboarded: true }); }
+    if (settings && !settings.onboarded) { settings.onboarded = true; await OpenCluely.settingsSet({ onboarded: true }); }
   }
   $('#ob-next').addEventListener('click', () => { if (obIndex === OB_STEPS.length - 1) finishOnboard(); else { obIndex++; renderOnboard(); } });
   $('#ob-back').addEventListener('click', () => { if (obIndex > 0) { obIndex--; renderOnboard(); } });
@@ -472,11 +522,11 @@
 
   // ---- boot --------------------------------------------------------------
   (async function boot() {
-    settings = await cue.settingsGet();
+    settings = await OpenCluely.settingsGet();
     smartBtn.classList.toggle('on', !!settings.smart);
     showExample();
     syncPlaceholder();
-    const st = await cue.captureState();
+    const st = await OpenCluely.captureState();
     $('#live-dot').classList.toggle('off', !st.active);
     $('#stop-btn').classList.toggle('active', st.active);
     if (!settings.onboarded) showOnboard();

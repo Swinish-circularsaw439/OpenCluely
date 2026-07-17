@@ -258,6 +258,8 @@ button:focus { outline: none; }
 .s-field input:focus { border-color: var(--accent); }
 .custom-provider-field input { margin-bottom: 4px; }
 .custom-provider-field input:first-of-type { margin-bottom: 0; }
+.s-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 6px 0 2px; }
+.stt-field { margin-top: 4px; }
 .s-status { color: var(--tx-mut); font-size: 12px; margin-top: 10px; min-height: 16px; }
 .s-credits { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.10); }
 .s-credit-item { font-size: 12px; color: var(--tx-mut); line-height: 1.5; }

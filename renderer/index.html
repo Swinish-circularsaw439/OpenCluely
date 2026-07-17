@@ -77,6 +77,20 @@
         <div class="s-field"><span>Fast</span><input id="model-fast" type="text" autocomplete="off" /></div>
         <div class="s-field"><span>Smart</span><input id="model-smart" type="text" autocomplete="off" /></div>
 
+        <div class="s-divider"></div>
+
+        <label class="s-label">Audio / Transcription <span class="s-hint">separate from chat provider</span></label>
+        <div class="s-seg" id="stt-provider-seg">
+          <button data-stt="auto">Auto</button>
+          <button data-stt="openai">OpenAI</button>
+          <button data-stt="gemini">Gemini</button>
+          <button data-stt="nvidia">NVIDIA</button>
+        </div>
+        <div id="stt-fields">
+          <div class="s-field stt-field"><span>Audio API Key</span><input id="stt-key" type="password" autocomplete="off" placeholder="Optional — falls back to chat key" /></div>
+          <div class="s-field stt-field"><span>Model</span><input id="stt-model" type="text" autocomplete="off" placeholder="Leave empty for default" /></div>
+        </div>
+
         <div class="s-status" id="s-status"></div>
         <div class="s-credits">
           <label class="s-label">OpenCluely</label>

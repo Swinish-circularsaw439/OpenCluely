@@ -45,10 +45,10 @@ function createWindow() {
     }
   });
 
-// Invisibility + overlay behavior. Set OPENCULEY_NO_PROTECT=1 to disable for debugging.
+// Invisibility + overlay behavior. Set OPENCUELY_NO_PROTECT=1 to disable for debugging.
 // Note: setContentProtection is macOS-specific. On Windows, we rely on other mechanisms.
   if (process.platform === 'darwin') {
-    win.setContentProtection(!process.env.CUE_NO_PROTECT); // excluded from screen capture (best-effort)
+    win.setContentProtection(!process.env.OPENCUELY_NO_PROTECT); // excluded from screen capture (best-effort)
   }
   win.setAlwaysOnTop(true, 'screen-saver', 1);
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
@@ -78,7 +78,7 @@ async function flushChannel(channel) {
     const settings = store.getSettings();
     const stt = createSTT(settings);
     if (!stt.available) {
-      if (!sttDisabled) { sttDisabled = true; send('status', { message: 'No transcription key set. Add an OpenAI (Whisper) or Gemini key in Settings to enable listening. Screen/LeetCode features work without it.' }); }
+      if (!sttDisabled) { sttDisabled = true; send('status', { message: stt.suggestion || 'No transcription provider available. Open Settings \u2192 Audio / Transcription to add one (OpenAI, Gemini, or NVIDIA Whisper).' }); }
       return;
     }
     const res = await stt.transcribe(pcm);
@@ -102,9 +102,9 @@ function handleSttError(err, settings) {
   console.log('[stt] error', err.provider, err.status, err.code, err.message);
   if (sttDisabled) return;
   const noAccess = err.status === 403 || err.status === 401 || err.code === 'model_not_found';
-  sttDisabled = true; // stop hammering the API every few seconds
+  sttDisabled = true;
   if (noAccess) {
-    send('status', { message: 'Transcription off: your ' + err.provider + ' key has no access to a speech-to-text model (403). Screen + LeetCode still work. To enable listening: give the key Whisper/transcription access, or add a Gemini key in Settings and reopen.' });
+    send('status', { message: 'Transcription off: your ' + err.provider + ' key lacks speech access. Try a different provider in Settings \u2192 Audio / Transcription (e.g. NVIDIA Whisper-large-v3 is free).' });
   } else {
     send('status', { message: 'Transcription error (' + err.provider + '): ' + err.message });
   }
@@ -118,10 +118,11 @@ function stopFlushLoop() { if (flushTimer) { clearInterval(flushTimer); flushTim
 
 // -------- capture toggle --------
 // Mic + system audio are both captured in the RENDERER (getUserMedia for the mic,
-// getDisplayMedia loopback for system audio) so they run inside cue's own process
-// and use cue's own Screen-Recording grant — no separate helper binary to authorize.
+// getDisplayMedia loopback for system audio) so they run inside OpenCluely's own process
+// and use OpenCluely's own Screen-Recording grant — no separate helper binary to authorize.
 function setCapturing(active) {
   state.capturing = active;
+  sttDisabled = false; // auto-recover from transient STT errors on restart
   if (active) {
     startFlushLoop();
   } else {
@@ -131,6 +132,8 @@ function setCapturing(active) {
   send('capture:state', { active });
   return active;
 }
+
+const MAX_TRANSCRIPT_TURNS = 200;
 
 // -------- feature runner --------
 async function runFeature(mode, userText) {
@@ -168,6 +171,8 @@ async function runFeature(mode, userText) {
       const userLabel = mode === 'ask' ? (userText || built) : ('[' + mode + ']');
       transcript.push({ channel: 'you', text: userLabel, ts: Date.now() });
       transcript.push({ channel: 'them', text: full.trim(), ts: Date.now() });
+      // Trim to prevent unbounded memory growth
+      if (transcript.length > MAX_TRANSCRIPT_TURNS) transcript.splice(0, transcript.length - MAX_TRANSCRIPT_TURNS);
     }
   } catch (e) {
     send('llm:error', { message: 'Error: ' + (e && e.message ? e.message : String(e)) });
@@ -185,7 +190,12 @@ ipcMain.on('ask', (_e, payload) => runFeature(payload.mode, payload.text));
 ipcMain.on('mic:pcm', (_e, arrayBuffer) => { if (state.capturing) buffers.you.push(Buffer.from(arrayBuffer)); });
 ipcMain.on('system:pcm', (_e, arrayBuffer) => { if (state.capturing) buffers.them.push(Buffer.from(arrayBuffer)); });
 ipcMain.on('mouse:ignore', (_e, v) => { if (win) win.setIgnoreMouseEvents(!!v, { forward: true }); });
-ipcMain.on('open-pane', (_e, url) => { shell.openExternal(url).catch(() => {}); });
+ipcMain.on('open-pane', (_e, url) => {
+  if (!url) return;
+  const allowed = ['https:', 'http:', 'ms-settings:', 'x-apple.systempreferences:'];
+  if (!allowed.some((p) => url.startsWith(p))) return;
+  shell.openExternal(url).catch(() => {});
+});
 ipcMain.on('log', (_e, msg) => console.log('[renderer]', msg));
 
 // -------- shortcuts --------
@@ -206,6 +216,11 @@ function registerShortcuts() {
 }
 
 // -------- lifecycle --------
+// Enable system-audio loopback via getDisplayMedia on macOS 13+.
+// These Chromium flags must be set before app.whenReady().
+if (process.platform === 'darwin') {
+  app.commandLine.appendSwitch('enable-features', 'MacLoopbackAudioForScreenShare,MacSckSystemAudioLoopbackOverride');
+}
 app.whenReady().then(() => {
   // Hide dock on macOS, minimize to system tray on Windows
   if (process.platform === 'darwin' && app.dock) app.dock.hide();

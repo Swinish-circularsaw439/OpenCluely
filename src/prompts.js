@@ -63,8 +63,8 @@ const MODES = {
       'You are OpenCluely. Summarize the conversation so far for someone who joined late: ' +
       'a few key points, any decisions, and action items. Use short bullets under bold headers. Be brief.',
     build(ctx) {
-      const t = formatTranscript(ctx.transcript, 0);
-      return 'Full transcript:\n' + (t || '(nothing captured yet)') + '\n\nRecap this.';
+      const t = formatTranscript(ctx.transcript, 60);
+      return 'Recent transcript:\n' + (t || '(nothing captured yet)') + '\n\nRecap this.';
     }
   },
 

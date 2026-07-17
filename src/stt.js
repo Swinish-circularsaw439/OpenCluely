@@ -1,14 +1,20 @@
-// Speech-to-text factory. Decoupled from the LLM provider because Anthropic has
-// no audio API — we transcribe with whatever audio-capable key is available, and
-// fall back across providers. Returns { text, provider } or { text:'', error }.
+// Speech-to-text factory. Decoupled from the LLM provider — users configure
+// their preferred STT provider separately in Audio / Transcription settings.
+// Returns { text, provider } or { text:'', error }.
 const { pcmToWav } = require('./wav');
 
-async function transcribeOpenAI(apiKey, wav, model) {
+// OpenAI-compatible providers: same API shape, different baseURL
+const STT_ENDPOINTS = {
+  openai:  { baseURL: undefined,                     defaultModel: 'whisper-1' },
+  nvidia:  { baseURL: 'https://integrate.api.nvidia.com/v1', defaultModel: 'whisper-large-v3' },
+};
+
+async function transcribeOpenAICompatible(apiKey, wav, model, label, baseURL) {
   const OpenAI = require('openai');
   const toFile = OpenAI.toFile || require('openai/uploads').toFile;
-  const client = new OpenAI({ apiKey });
+  const client = baseURL ? new OpenAI({ apiKey, baseURL }) : new OpenAI({ apiKey });
   const file = await toFile(wav, 'audio.wav', { type: 'audio/wav' });
-  const res = await client.audio.transcriptions.create({ file, model: model || 'whisper-1' });
+  const res = await client.audio.transcriptions.create({ file, model: model || STT_ENDPOINTS[label]?.defaultModel || 'whisper-1' });
   return (res.text || '').trim();
 }
 
@@ -16,7 +22,7 @@ async function transcribeGemini(apiKey, wav) {
   const { GoogleGenAI } = require('@google/genai');
   const ai = new GoogleGenAI({ apiKey });
   const res = await ai.models.generateContent({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.5-flash',
     contents: [{ role: 'user', parts: [
       { text: 'Transcribe this audio verbatim. Return only the spoken words with no commentary. If there is no clear speech, return an empty response.' },
       { inlineData: { mimeType: 'audio/wav', data: wav.toString('base64') } }
@@ -25,15 +31,84 @@ async function transcribeGemini(apiKey, wav) {
   return ((res && res.text) || '').trim();
 }
 
+function suggestionMessage(expectedSTT) {
+  const label = expectedSTT ? ' for "' + expectedSTT + '"' : '';
+  const lines = [
+    'Transcription unavailable' + label + ' — configure an audio provider in Settings → Audio / Transcription.',
+    'Options:',
+    '  • OpenAI Whisper (paid, ~$0.006/min) — add OpenAI key',
+    '  • Gemini 2.5 Flash (free tier) — add Gemini key (or reuse chat key)',
+    '  • NVIDIA Whisper-large-v3 (free, ~40 rpm) — free key at build.nvidia.com',
+  ];
+  return lines.join('\n');
+}
+
 function createSTT(settings) {
   const keys = settings.apiKeys || {};
+  const chatProvider = settings.provider || 'openai';
+  const sttProvider = (settings.sttProvider || 'auto').toLowerCase();
+  const sttKey = settings.sttApiKey || '';
+  const sttModel = settings.sttModel || '';
   const chain = [];
-  if (keys.openai) chain.push({ p: 'openai', fn: (wav) => transcribeOpenAI(keys.openai, wav, settings.sttModel) });
-  if (keys.gemini) chain.push({ p: 'gemini', fn: (wav) => transcribeGemini(keys.gemini, wav) });
+
+  function addOpenAI(key, m, label) {
+    const ep = STT_ENDPOINTS[label] || STT_ENDPOINTS.openai;
+    chain.push({ p: label, fn: (wav) => transcribeOpenAICompatible(key, wav, m || ep.defaultModel, label, ep.baseURL) });
+  }
+  function addGemini(key) {
+    chain.push({ p: 'gemini', fn: (wav) => transcribeGemini(key, wav) });
+  }
+
+  const VALID_STT = ['auto', 'openai', 'gemini', 'nvidia', 'deepgram'];
+
+  if (sttProvider === 'auto') {
+    // Derive from chat provider, then fall back
+    if (chatProvider === 'openai' && keys.openai) {
+      addOpenAI(keys.openai, sttModel, 'openai');
+    } else if (chatProvider === 'gemini' && keys.gemini) {
+      addGemini(keys.gemini);
+    }
+    // Fallback: OpenAI → Gemini → NVIDIA
+    if (chatProvider !== 'openai' && keys.openai) addOpenAI(keys.openai, sttModel, 'openai');
+    if (chatProvider !== 'gemini' && keys.gemini) addGemini(keys.gemini);
+    if (keys.nvidia) addOpenAI(keys.nvidia, sttModel, 'nvidia');
+  } else {
+    if (!VALID_STT.includes(sttProvider)) {
+      return {
+        available: false,
+        providers: [],
+        suggestion: 'Unknown STT provider "' + sttProvider + '". Choose OpenAI, Gemini, or NVIDIA in Settings → Audio / Transcription.',
+        async transcribe() { return { text: '', error: { message: 'Unknown STT provider: ' + sttProvider } }; }
+      };
+    }
+    const key = sttKey || keys[sttProvider] || '';
+    if (!key) {
+      return {
+        available: false,
+        providers: [],
+        suggestion: suggestionMessage(sttProvider),
+        async transcribe() { return { text: '', error: { message: 'No API key for STT provider "' + sttProvider + '". Open Settings → Audio / Transcription to configure.' } }; }
+      };
+    }
+    if (sttProvider === 'gemini') {
+      addGemini(key);
+    } else if (sttProvider === 'deepgram') {
+      return {
+        available: false,
+        providers: [],
+        suggestion: 'Deepgram support coming soon. Use OpenAI, Gemini, or NVIDIA for now.',
+        async transcribe() { return { text: '', error: { message: 'Deepgram transcription is not yet implemented.' } }; }
+      };
+    } else {
+      // OpenAI-compatible (openai, nvidia)
+      addOpenAI(key, sttModel, sttProvider);
+    }
+  }
 
   return {
     available: chain.length > 0,
     providers: chain.map((c) => c.p),
+    suggestion: chain.length ? '' : suggestionMessage(),
     async transcribe(pcm) {
       if (!chain.length || !pcm || pcm.length < 3200) return { text: '' };
       const wav = pcmToWav(pcm, 16000, 1);
