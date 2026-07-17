@@ -426,18 +426,26 @@
       title: 'Stay hidden in Zoom',
       body: 'OpenCluely is hidden from most screen shares automatically (Google Meet, Teams, QuickTime — nothing to do). <strong>Zoom needs one setting:</strong><br><br>Zoom → <span class="hl">Settings</span> → <span class="hl">Share Screen</span> → <span class="hl">Advanced</span> → <strong>Screen capture mode</strong> → choose <strong>“Advanced capture with window filtering.”</strong><br><br>Avoid “<strong>without</strong> window filtering” — that mode reveals OpenCluely.'
     },
-     {
-       icon: '✨',
-       title: 'You’re all set',
-       body: (() => {
-         if (window.cue.platform === 'win32') {
-           return 'How to use OpenCluely:<ul><li><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">Ctrl</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
-         } else {
-           return 'How to use OpenCluely:<ul><li><span class="kbd">⌘</span> + <span class="kbd">↵</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">⌘</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">⌘</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
-         }
-       })()
-     }
-   ];
+      {
+        icon: '✨',
+        title: 'You’re all set',
+        body: (() => {
+          if (window.cue.platform === 'win32') {
+            return 'How to use OpenCluely:<ul><li><span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">Ctrl</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
+          } else {
+            return 'How to use OpenCluely:<ul><li><span class="kbd">⌘</span> + <span class="kbd">↵</span> — <strong>Assist</strong> with whatever\'s on screen or being said</li><li><span class="kbd">⌘</span> + <span class="kbd">H</span> — solve a coding problem on screen</li><li>Click <strong>▢</strong> in the top bar to start listening to a meeting</li><li>Type a question and press <span class="kbd">Enter</span></li></ul>Reopen this guide anytime by clicking the <strong>OpenCluely logo</strong>. Quit with <span class="kbd">⌘</span> + <span class="kbd">Shift</span> + <span class="kbd">X</span>.';
+          }
+        })()
+      },
+      {
+        icon: '⭐',
+        title: 'Support the project',
+        body: 'If you find OpenCluely useful, please consider starring the project on GitHub. It helps others discover it and keeps development active.<br><br>Created by <strong>Rahul Shyam</strong>. Follow on <a href="https://github.com/rahulcvwebsitehosting" target="_blank" style="color:var(--accent);">GitHub</a> for updates.',
+        buttons: [
+          { label: 'Star on GitHub', action: () => cue.openPane('https://github.com/rahulcvwebsitehosting/OpenCluely') }
+        ]
+      }
+    ];
   let obIndex = 0;
   function renderOnboard() {
     const step = OB_STEPS[obIndex];
@@ -451,7 +459,6 @@
     $('#ob-back').style.visibility = obIndex === 0 ? 'hidden' : 'visible';
     $('#ob-next').textContent = obIndex === OB_STEPS.length - 1 ? 'Done' : 'Next';
     $('#ob-skip').style.visibility = obIndex === OB_STEPS.length - 1 ? 'hidden' : 'visible';
-    $('#ob-visit').style.visibility = obIndex === OB_STEPS.length - 1 ? 'visible' : 'hidden';
   }
   function showOnboard() { obIndex = 0; renderOnboard(); obScrim.classList.remove('hidden'); setIgnore(false); }
   async function finishOnboard() {
@@ -460,7 +467,6 @@
   }
   $('#ob-next').addEventListener('click', () => { if (obIndex === OB_STEPS.length - 1) finishOnboard(); else { obIndex++; renderOnboard(); } });
   $('#ob-back').addEventListener('click', () => { if (obIndex > 0) { obIndex--; renderOnboard(); } });
-  $('#ob-visit').addEventListener('click', () => cue.openPane('https://github.com/rahulcvwebsitehosting/OpenCluely'));
   $('#ob-skip').addEventListener('click', finishOnboard);
   $('#logo-btn').addEventListener('click', showOnboard);
 

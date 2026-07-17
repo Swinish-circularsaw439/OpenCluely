@@ -246,8 +246,8 @@ button:focus { outline: none; }
 .s-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .s-label { color: var(--tx-2); font-size: 13px; font-weight: 600; margin-top: 8px; }
 .s-hint { color: var(--tx-mut); font-weight: 400; font-size: 11px; margin-left: 6px; }
-.s-seg { display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0; padding-bottom: 2px; }
-.s-seg::-webkit-scrollbar { height: 3px; }
+.s-seg { display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0; padding-bottom: 6px; }
+.s-seg::-webkit-scrollbar { height: 6px; }
 .s-seg::-webkit-scrollbar-track { background: transparent; }
 .s-seg::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 .s-seg button { flex-shrink: 0; padding: 8px; border-radius: var(--r-8); border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.04); color: var(--tx-2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 140ms ease; }
