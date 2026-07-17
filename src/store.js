@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 
-const FILE = path.join(app.getPath('userData'), 'cue-data.json');
+const FILE = path.join(app.getPath('userData'), 'opencluely-data.json');
 
 const DEFAULTS = {
   provider: 'openai',
