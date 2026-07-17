@@ -451,6 +451,7 @@
     $('#ob-back').style.visibility = obIndex === 0 ? 'hidden' : 'visible';
     $('#ob-next').textContent = obIndex === OB_STEPS.length - 1 ? 'Done' : 'Next';
     $('#ob-skip').style.visibility = obIndex === OB_STEPS.length - 1 ? 'hidden' : 'visible';
+    $('#ob-visit').style.visibility = obIndex === OB_STEPS.length - 1 ? 'visible' : 'hidden';
   }
   function showOnboard() { obIndex = 0; renderOnboard(); obScrim.classList.remove('hidden'); setIgnore(false); }
   async function finishOnboard() {
@@ -459,6 +460,7 @@
   }
   $('#ob-next').addEventListener('click', () => { if (obIndex === OB_STEPS.length - 1) finishOnboard(); else { obIndex++; renderOnboard(); } });
   $('#ob-back').addEventListener('click', () => { if (obIndex > 0) { obIndex--; renderOnboard(); } });
+  $('#ob-visit').addEventListener('click', () => cue.openPane('https://github.com/rahulcvwebsitehosting/OpenCluely'));
   $('#ob-skip').addEventListener('click', finishOnboard);
   $('#logo-btn').addEventListener('click', showOnboard);
 

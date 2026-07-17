@@ -156,13 +156,19 @@ async function runFeature(mode, userText) {
     }
 
     const built = def.build({ transcript, userText: userText || '' });
-    await llm.stream({
+    const full = await llm.stream({
       system: def.system,
       turns: [{ role: 'user', text: built }],
       imageDataUrl,
       onToken: (t) => send('llm:token', { text: t })
     });
     send('llm:done', {});
+    // Save to transcript so Recap remembers past interactions
+    if (full && full.trim()) {
+      const userLabel = mode === 'ask' ? (userText || built) : ('[' + mode + ']');
+      transcript.push({ channel: 'you', text: userLabel, ts: Date.now() });
+      transcript.push({ channel: 'them', text: full.trim(), ts: Date.now() });
+    }
   } catch (e) {
     send('llm:error', { message: 'Error: ' + (e && e.message ? e.message : String(e)) });
   } finally {
