@@ -10,7 +10,7 @@ Bring your own AI key — OpenAI · Anthropic · Gemini · Mistral · NVIDIA · 
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](#quick-start)
 [![Stars](https://img.shields.io/github/stars/rahulcvwebsitehosting/OpenCluely?style=social)](https://github.com/rahulcvwebsitehosting/OpenCluely)
 
-<img src="docs/overlay.png" width="620" alt="OpenCluely floating overlay panel" />
+<img src="docs/tutorial.png" width="620" alt="OpenCluely first-run tutorial" />
 
 </div>
 
